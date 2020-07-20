@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Engine/DataTable.h"
 #include "TaskManagerSubsystem.generated.h"
 
 UENUM()
@@ -53,6 +54,9 @@ class TASKSYSTEM_API UTaskManagerSubsystem : public UGameInstanceSubsystem
 	
 private:
 
+	UPROPERTY()
+	class UDataTable* TaskDataTable;
+
 	// Task List
 	UPROPERTY(VisibleAnywhere, Category="Task")
 	TArray<FTaskStruct> TaskList;
@@ -66,6 +70,8 @@ private:
 	bool bIsTaskCompleted;
 
 public:
+
+	UTaskManagerSubsystem();
 
 	UFUNCTION(BlueprintCallable)
 	TArray<FTaskStruct> GetTaskList();

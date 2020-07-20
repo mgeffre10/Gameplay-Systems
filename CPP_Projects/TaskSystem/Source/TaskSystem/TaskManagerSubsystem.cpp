@@ -3,6 +3,13 @@
 
 #include "TaskManagerSubsystem.h"
 
+UTaskManagerSubsystem::UTaskManagerSubsystem()
+{
+	// TaskDataTable->RowStruct = FTaskStruct::StaticStruct();
+
+	
+}
+
 TArray<FTaskStruct> UTaskManagerSubsystem::GetTaskList()
 {
 	return TaskList;
