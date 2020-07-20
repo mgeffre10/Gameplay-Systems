@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "TaskManagerSubsystem.h"
 #include "TSGameInstance.generated.h"
 
 /**
@@ -18,4 +19,11 @@ class TASKSYSTEM_API UTSGameInstance : public UGameInstance
 public:
 
 	// Task System
+	UPROPERTY()
+	UTaskManagerSubsystem* TaskSystem;
+
+	virtual void Init() override;
+
+	UFUNCTION(BlueprintCallable)
+		UTaskManagerSubsystem* GetTaskSystem();
 };
