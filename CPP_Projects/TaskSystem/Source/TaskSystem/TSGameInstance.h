@@ -22,8 +22,12 @@ public:
 	UPROPERTY()
 	UTaskManagerSubsystem* TaskSystem;
 
-	virtual void Init() override;
-
 	UFUNCTION(BlueprintCallable)
-		UTaskManagerSubsystem* GetTaskSystem();
+	UTaskManagerSubsystem* GetTaskSystem();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateCurrentTaskWidget(FTaskStruct Task);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateTaskListWidget();
 };

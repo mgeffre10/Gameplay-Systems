@@ -2,6 +2,9 @@
 
 
 #include "ItemPickup.h"
+#include "TaskManagerSubsystem.h"
+#include "TSGameInstance.h"
+
 #include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -45,6 +48,25 @@ void AItemPickup::Tick(float DeltaTime)
 void AItemPickup::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Overlap Begin on AItemPickup"));
+
+	
+	UTaskManagerSubsystem* TaskManager = GetGameInstance()->GetSubsystem<UTaskManagerSubsystem>();
+
+	FTaskStruct CurrentTask = TaskManager->GetCurrentTask();
+
+	if (SweepResult.GetActor() != nullptr)
+	{
+		if (CurrentTask.FetchItemTypes.Contains(SweepResult.GetActor()->GetClass()))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s is part of FetchItemTypes of current task."), *SweepResult.GetActor()->GetClass()->GetName())
+			TaskManager->IncrementCurrentItemCount();
+			Destroy();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s is not part of FetchItemTypes of current task."), *SweepResult.GetActor()->GetClass()->GetName())
+		}
+	}
 }
 
 void AItemPickup::OnComponentEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)

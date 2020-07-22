@@ -2,17 +2,28 @@
 
 
 #include "TaskManagerSubsystem.h"
+#include "TSGameInstance.h"
 
-UTaskManagerSubsystem::UTaskManagerSubsystem()
+void UTaskManagerSubsystem::SetTaskDataTable(UDataTable* DataTable)
 {
-	// TaskDataTable->RowStruct = FTaskStruct::StaticStruct();
-
-	
+	TaskDataTable = DataTable;
 }
 
-TArray<FTaskStruct> UTaskManagerSubsystem::GetTaskList()
+TArray<FName> UTaskManagerSubsystem::GetTaskList()
 {
-	return TaskList;
+	return TaskDataTable->GetRowNames();
+}
+
+void UTaskManagerSubsystem::UpdateTaskList(FName TaskName, FTaskStruct UpdatedTask)
+{
+	for (auto iter : TaskDataTable->GetRowMap())
+	{
+		if (iter.Key == TaskName)
+		{
+			FTaskStruct* Task = (FTaskStruct*)iter.Value;
+			Task = &UpdatedTask;
+		}
+	}
 }
 
 FTaskStruct UTaskManagerSubsystem::GetCurrentTask()
@@ -20,40 +31,63 @@ FTaskStruct UTaskManagerSubsystem::GetCurrentTask()
 	return CurrentTask;
 }
 
-void UTaskManagerSubsystem::SetCurrentTask(FName TaskId)
+ETaskStatus UTaskManagerSubsystem::GetTaskStatus(FName Task)
 {
-	for (FTaskStruct Task : TaskList)
+	if (TaskDataTable->GetRowMap().Contains(Task))
 	{
-		if (Task.TaskId == TaskId)
-		{
-			CurrentTask = Task;
-			return;
-		}
-	}
-}
-
-ETaskStatus UTaskManagerSubsystem::GetTaskStatus(FName TaskId)
-{
-	for (FTaskStruct Task : TaskList)
-	{
-		if (Task.TaskId == TaskId)
-		{
-			return Task.Status;
-		}
+		return TaskDataTable->FindRow<FTaskStruct>(Task, ContextString)->Status;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("%s does not contain task %s"), *ContextString, *Task.ToString());
 	return ETaskStatus::ETS_Unavailable;
+	
 }
 
-ETaskType UTaskManagerSubsystem::GetTaskType(FName TaskId)
+ETaskType UTaskManagerSubsystem::GetTaskType(FName Task)
 {
-	for (FTaskStruct Task : TaskList)
+	if (TaskDataTable->GetRowMap().Contains(Task))
 	{
-		if (Task.TaskId == TaskId)
-		{
-			return Task.Type;
-		}
+		return TaskDataTable->FindRow<FTaskStruct>(Task, ContextString)->Type;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("%s does not contain task %s"), *ContextString, *Task.ToString());
 	return ETaskType::ETT_Unavailable;
+}
+
+void UTaskManagerSubsystem::IncrementCurrentItemCount()
+{
+	CurrentTask.CurrentItemCount++;
+	Cast<UTSGameInstance>(GetGameInstance())->UpdateCurrentTaskWidget(CurrentTask);
+	CheckIfTaskComplete();
+}
+
+void UTaskManagerSubsystem::CheckIfTaskComplete()
+{
+	if (CurrentTask.CurrentItemCount == CurrentTask.ItemRequirementCount)
+	{
+		CurrentTask.Status = ETaskStatus::ETS_Completed;
+	}
+}
+
+void UTaskManagerSubsystem::GetNextTask()
+{
+	if (CurrentTask.Status == ETaskStatus::ETS_Completed || CurrentTask.Title.IsEmpty())
+	{
+		if (CurrentTask.Status == ETaskStatus::ETS_Completed)
+		{
+			UpdateTaskList(CurrentTaskName, CurrentTask);
+		}
+
+		for (auto iter : TaskDataTable->GetRowMap())
+		{
+			FTaskStruct Task = *(FTaskStruct*)iter.Value;
+
+			if (Task.Status == ETaskStatus::ETS_NotStarted && iter.Key != CurrentTaskName)
+			{
+				CurrentTask = Task;
+				CurrentTaskName = iter.Key;
+				return;
+			}
+		}
+	}
 }
